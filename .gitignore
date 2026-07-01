@@ -44,3 +44,8 @@ publish/
 # Build artifacts
 *.zip
 *.7z
+
+# Architecture-specific publish folders
+publish-x64/
+publish-x86/
+publish-arm64/
