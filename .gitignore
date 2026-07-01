@@ -40,3 +40,7 @@ publish/
 
 # macOS
 .DS_Store
+
+# Build artifacts
+*.zip
+*.7z
