@@ -1,17 +1,23 @@
 using System.Diagnostics;
 using Microsoft.Win32;
 
-Application.EnableVisualStyles();
-Application.SetCompatibleTextRenderingDefault(false);
-
-// Handle elevated commands
-if (args.Length > 0)
+static class Program
 {
-    MainForm.HandleElevated(args);
-    return;
-}
+    [STAThread]
+    static void Main(string[] args)
+    {
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
 
-Application.Run(new MainForm());
+        if (args.Length > 0)
+        {
+            MainForm.HandleElevated(args);
+            return;
+        }
+
+        Application.Run(new MainForm());
+    }
+}
 
 enum EntrySource { HKCU, HKLM, HKLMX86, StartupFolder, CommonStartup, DisabledStore }
 
