@@ -57,6 +57,8 @@ class MainForm : Form
 
     FlowLayoutPanel listPanel;
     Label statusLabel;
+    TextBox pathInput;
+    Button pathAddBtn;
     readonly List<StartupEntry> entries = [];
     readonly List<EntryCard> cards = [];
 
@@ -64,7 +66,7 @@ class MainForm : Form
     {
         Text = "LStartlai";
         Size = new Size(720, 580);
-        MinimumSize = new Size(520, 400);
+        MinimumSize = new Size(700, 400);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = bg;
         ForeColor = text;
@@ -97,7 +99,29 @@ class MainForm : Form
             Anchor = AnchorStyles.Top | AnchorStyles.Right, Cursor = Cursors.Hand
         };
         closeBtn.Click += (_, _) => Close();
-        titleBar.Controls.AddRange([titleLbl, subtitle, closeBtn]);
+
+        pathAddBtn = new Button
+        {
+            Text = "+", FlatStyle = FlatStyle.Flat,
+            FlatAppearance = { BorderSize = 0, MouseOverBackColor = accent },
+            ForeColor = accent, Font = new Font("Segoe UI", 14, FontStyle.Bold),
+            Size = new Size(30, 30), Location = new Point(Width - 82, 7),
+            Anchor = AnchorStyles.Top | AnchorStyles.Right, Cursor = Cursors.Hand, Visible = false
+        };
+        pathInput = new TextBox
+        {
+            Text = "", ForeColor = Color.FromArgb(180, 180, 200),
+            BackColor = Color.FromArgb(35, 35, 60),
+            BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 9),
+            Size = new Size(220, 24), Location = new Point(Width - 308, 9),
+            Anchor = AnchorStyles.Top | AnchorStyles.Right, Visible = false
+        };
+        pathInput.Enter += (_, _) => { if (pathInput.Text == "Paste app path...") { pathInput.Text = ""; pathInput.ForeColor = Color.White; } };
+        pathInput.Leave += (_, _) => { if (string.IsNullOrWhiteSpace(pathInput.Text)) { pathInput.Text = "Paste app path..."; pathInput.ForeColor = Color.FromArgb(180, 180, 200); } };
+        pathInput.KeyDown += (_, e) => { if (e.KeyCode == Keys.Enter) { DoQuickAdd(); e.Handled = true; e.SuppressKeyPress = true; } };
+        pathAddBtn.Click += (_, _) => DoQuickAdd();
+
+        titleBar.Controls.AddRange([titleLbl, subtitle, pathAddBtn, pathInput, closeBtn]);
 
         var toolbar = new Panel { Dock = DockStyle.Top, Height = 84, BackColor = bg };
         var header = new Label
@@ -308,9 +332,9 @@ class MainForm : Form
         }
     }
 
-    void AddDroppedFile(string path)
+    void QuickAddPath(string path)
     {
-        if (!File.Exists(path)) return;
+        if (!File.Exists(path)) { statusLabel.Text = "File not found"; return; }
         var ext = Path.GetExtension(path).ToLowerInvariant();
         if (ext != ".exe" && ext != ".lnk" && ext != ".url")
         {
@@ -335,6 +359,16 @@ class MainForm : Form
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
+
+    void DoQuickAdd()
+    {
+        var text = pathInput.Text?.Trim();
+        if (string.IsNullOrEmpty(text) || text == "Paste app path...") return;
+        QuickAddPath(text);
+        pathInput.Text = "";
+    }
+
+    void AddDroppedFile(string path) => QuickAddPath(path);
 
     void ToggleEntry(StartupEntry entry)
     {
@@ -526,6 +560,9 @@ class MainForm : Form
         base.OnResize(e);
         foreach (var c in cards)
             if (!c.IsDisposed) c.Width = listPanel.ClientSize.Width - 24;
+        var wide = Width >= 870;
+        if (pathInput != null) { pathInput.Visible = wide; pathInput.Width = Math.Max(120, Width - 600); }
+        if (pathAddBtn != null) pathAddBtn.Visible = wide;
     }
 
     internal static void HandleElevated(string[] args)
